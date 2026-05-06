@@ -31,7 +31,7 @@ def run_test(tup):
     global status
     test_name = test_path.stem
     status[tup] = "P"
-    design_dir = __file_dir__ / "tests" / test_name
+    design_dir = __file_dir__ / "tests" / scl / test_name
     try:
         design_dir.mkdir(parents=True, exist_ok=True)
         top_clean = design_dir / f"top_{strat}.v"
