@@ -20,10 +20,11 @@ cols = [
     "Cell Count",
     "Scannable Elements",
     "Scannable Element Ratio",
+    "Instance Area",
 ]
 for metric in [
-    # "Worst Slack",
-    # "Total Negative Slack",
+    "Worst Slack",
+    "Total Negative Slack",
     "Routing Time",
     "Congestion Score",
     "Scan Chain Routed WL",
@@ -94,6 +95,8 @@ for design_dir_raw in sys.argv[1:]:
             synth_run = final_dir.parents[1] / "synth"
             synth_dir = next(synth_run.glob("*-difetto-synthesis"))
         drt_dir = next(final_dir.parent.glob("*-openroad-detailedrouting"))
+        fp_dir = next(final_dir.parent.glob("*-openroad-floorplan"), None)
+        sta_dir = next(final_dir.parent.glob("*-openroad-stapostpnr"), None)
         heatmap_dir = next(
             final_dir.parent.glob("*-openroad-dumpcongestionheatmap"),
             None,
@@ -112,6 +115,10 @@ for design_dir_raw in sys.argv[1:]:
             dft_dir = next(final_dir.parent.glob("*-difetto-chain"))
             w("Standard Cell Library", drt_conf["STD_CELL_LIBRARY"])
             w("Cell Count", synth_metrics["design__instance__count"])
+            if fp_dir is not None and (fp_dir / "state_out.json").exists():
+                with open(fp_dir / "state_out.json") as f:
+                    fp_metrics = json.load(f)["metrics"]
+                w("Instance Area", fp_metrics.get("design__instance__area__stdcell"))
             w(
                 "Scannable Elements",
                 sum(
@@ -125,6 +132,11 @@ for design_dir_raw in sys.argv[1:]:
             scannable_ref = xl_rowcol_to_cell(row, col_by_name["Scannable Elements"])
             wf("Scannable Element Ratio", f"={scannable_ref}/{cells_ref}")
             w("Routing Threads", drt_conf["DRT_THREADS"])
+        if sta_dir is not None and (sta_dir / "state_out.json").exists():
+            with open(sta_dir / "state_out.json") as f:
+                sta_metrics = json.load(f)["metrics"]
+            w(f"Worst Slack ({strat})", sta_metrics.get("timing__setup__wns"))
+            w(f"Total Negative Slack ({strat})", sta_metrics.get("timing__setup__tns"))
         w(
             f"Routing Time ({strat})",
             get_elapsed_drt_time(drt_dir / "openroad-detailedrouting.log"),
@@ -149,8 +161,8 @@ for design_dir_raw in sys.argv[1:]:
 first_se_ratio = xl_rowcol_to_cell(1, col_by_name["Scannable Element Ratio"])
 last_se_ratio = xl_rowcol_to_cell(row, col_by_name["Scannable Element Ratio"])
 for metric in [
-    # "Worst Slack",
-    # "Total Negative Slack",
+    "Worst Slack",
+    "Total Negative Slack",
     "Routing Time",
     "Congestion Score",
     "Scan Chain Routed WL",
