@@ -3,12 +3,12 @@ read_current_odb
 
 puts "=== Total routed wirelength calculation is enabled ==="
 
-# Collect all nets connected to SCD (scan-in) pins — one net per scan chain edge.
+# Collect all nets connected to scan-in cell pins — one net per scan chain edge.
 set block [ord::get_db_block]
 set scan_net_names {}
 foreach inst [$block getInsts] {
   foreach iterm [$inst getITerms] {
-    if { [[$iterm getMTerm] getName] eq "SCD" } {
+    if { [[$iterm getMTerm] getName] eq $::env(SCAN_IN_PIN_NAME) } {
       set net [$iterm getNet]
       if { $net ne "NULL" } {
         lappend scan_net_names [$net getName]

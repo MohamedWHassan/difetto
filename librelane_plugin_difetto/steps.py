@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (c) 2025 Mohamed Gaber
+import json
 import os
 import re
 import math
@@ -447,15 +448,25 @@ class DumpCongestionHeatmap(OpenROADStep):
 class ReportScanChainWL(OpenROADStep):
     """
     Reports the routed wirelength of scan-chain nets after detailed routing.
-    Identifies scan nets by SCD (scan-in) iterm connections.
+    Identifies scan nets by the scan-in cell pin (cell_sci from DFT_JSON_MAPPING).
     """
 
     id = "OpenROAD.ReportScanChainWL"
+
+    config_vars = OpenROADStep.config_vars + dft_common_vars
 
     def get_script_path(self):
         return os.path.join(
             __file_dir__, "scripts", "openroad", "report_scan_wl.tcl"
         )
+
+    def run(self, state_in, **kwargs):
+        kwargs, env = self.extract_env(kwargs)
+        mapping_path = self.config["DFT_JSON_MAPPING"]
+        with open(mapping_path) as f:
+            mapping = json.load(f)
+        env["SCAN_IN_PIN_NAME"] = mapping.get("vars", {}).get("cell_sci", "SCD")
+        return super().run(state_in, env=env, **kwargs)
 
 
 class CocotbStep(Step):
